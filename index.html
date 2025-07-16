@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reseller Profit Calculator</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 2rem; }
+    .container { background: #fff; padding: 2rem; max-width: 600px; margin: auto; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label, select, input { display: block; margin-bottom: 1rem; width: 100%; font-size: 1rem; }
+    button { padding: 0.7rem; background: #007bff; color: white; border: none; font-size: 1rem; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #0056b3; }
+    .output { margin-top: 2rem; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Reseller Profit Calculator</h2>
+
+    <p><strong>How to Use:</strong> Open this file in any browser. Select a platform, enter the Terapeak average sold price and your cost of goods. Click "Calculate" to see your list price, estimated fees, net, profit, and break-even offer.</p>
+
+    <label for="platform">Platform</label>
+    <select id="platform">
+      <option value="ebay">eBay</option>
+      <option value="poshmark">Poshmark</option>
+      <option value="mercari">Mercari</option>
+      <option value="depop_vintage">Depop (Vintage)</option>
+      <option value="depop_fast">Depop (Fast Fashion)</option>
+      <option value="etsy">Etsy</option>
+    </select>
+
+    <label for="tpAvg">Terapeak Avg Price</label>
+    <input type="number" id="tpAvg" step="0.01">
+
+    <label for="cogs">Cost of Goods (COGS)</label>
+    <input type="number" id="cogs" step="0.01">
+
+    <button onclick="calculateProfit()">Calculate</button>
+
+    <div class="output" id="output"></div>
+  </div>
+
+  <script>
+    function calculateProfit() {
+      const platform = document.getElementById('platform').value;
+      const tpAvg = parseFloat(document.getElementById('tpAvg').value);
+      const cogs = parseFloat(document.getElementById('cogs').value);
+
+      const markupMap = {
+        ebay: 15,
+        poshmark: 25,
+        mercari: 20,
+        depop_vintage: 15,
+        depop_fast: 10,
+        etsy: 25
+      };
+
+      const feeMap = {
+        ebay: 21,
+        poshmark: 20,
+        mercari: 20,
+        depop_vintage: 10,
+        depop_fast: 10,
+        etsy: 12
+      };
+
+      if (isNaN(tpAvg) || isNaN(cogs)) {
+        document.getElementById('output').innerHTML = '<span style="color:red;">Please enter valid numbers for TP AVG and COGS.</span>';
+        return;
+      }
+
+      const markupPct = markupMap[platform];
+      const feePct = feeMap[platform];
+
+      const listPrice = tpAvg * (1 + markupPct / 100);
+      const fees = listPrice * (feePct / 100);
+      const net = listPrice - fees;
+      const profit = net - cogs;
+      const breakEven = listPrice - profit;
+
+      document.getElementById('output').innerHTML = `
+        <strong>Suggested List Price:</strong> $${listPrice.toFixed(2)}<br>
+        <strong>Estimated Fees:</strong> $${fees.toFixed(2)} (${feePct}%)<br>
+        <strong>Net After Fees:</strong> $${net.toFixed(2)}<br>
+        <strong>Profit:</strong> $${profit.toFixed(2)}<br>
+        <strong>Break-Even Offer:</strong> $${breakEven.toFixed(2)}
+      `;
+    }
+  </script>
+</body>
+</html>
