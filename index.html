@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reseller Profit Calculator</title>
   <style>
     body { font-family: Arial; background: #f4f4f4; padding: 2rem; }
@@ -17,8 +16,6 @@
 <body>
   <div class="container">
     <h2>Reseller Profit Calculator</h2>
-
-    <p><strong>How to Use:</strong> Open this file in any browser. Select a platform, enter the Terapeak average sold price and your cost of goods. Click "Calculate" to see your list price, estimated fees, net, profit, and break-even offer.</p>
 
     <label for="platform">Platform</label>
     <select id="platform">
@@ -36,6 +33,14 @@
     <label for="cogs">Cost of Goods (COGS)</label>
     <input type="number" id="cogs" step="0.01">
 
+    <label for="offerPct">Accepted Offer (%)</label>
+    <input type="number" id="offerPct" value="0" step="1">
+
+    <label for="promoToggle">
+      <input type="checkbox" id="promoToggle" checked>
+      Include Promoted Listing Fees
+    </label>
+
     <button onclick="calculateProfit()">Calculate</button>
 
     <div class="output" id="output"></div>
@@ -46,6 +51,8 @@
       const platform = document.getElementById('platform').value;
       const tpAvg = parseFloat(document.getElementById('tpAvg').value);
       const cogs = parseFloat(document.getElementById('cogs').value);
+      const offerPct = parseFloat(document.getElementById('offerPct').value) || 0;
+      const includePromo = document.getElementById('promoToggle').checked;
 
       const markupMap = {
         ebay: 15,
@@ -56,36 +63,60 @@
         etsy: 25
       };
 
-      const feeMap = {
-        ebay: 21,
+      const baseFeeMap = {
+        ebay: 13,
         poshmark: 20,
-        mercari: 20,
+        mercari: 10,
         depop_vintage: 10,
         depop_fast: 10,
         etsy: 12
       };
 
-      if (isNaN(tpAvg) || isNaN(cogs)) {
-        document.getElementById('output').innerHTML = '<span style="color:red;">Please enter valid numbers for TP AVG and COGS.</span>';
-        return;
-      }
+      const promoFeeMap = {
+        ebay: 8,
+        poshmark: 0,
+        mercari: 10,
+        depop_vintage: 0,
+        depop_fast: 0,
+        etsy: 0
+      };
 
       const markupPct = markupMap[platform];
-      const feePct = feeMap[platform];
+      const baseFee = baseFeeMap[platform];
+      const promoFee = includePromo ? promoFeeMap[platform] : 0;
 
+      const feePct = baseFee + promoFee;
       const listPrice = tpAvg * (1 + markupPct / 100);
-      const fees = listPrice * (feePct / 100);
-      const net = listPrice - fees;
+      const discountedPrice = listPrice * (1 - offerPct / 100);
+      const fees = discountedPrice * (feePct / 100);
+      const net = discountedPrice - fees;
       const profit = net - cogs;
       const breakEven = listPrice - profit;
 
       document.getElementById('output').innerHTML = `
         <strong>Suggested List Price:</strong> $${listPrice.toFixed(2)}<br>
+        <strong>Accepted Offer Price:</strong> $${discountedPrice.toFixed(2)} (${offerPct}% off)<br>
         <strong>Estimated Fees:</strong> $${fees.toFixed(2)} (${feePct}%)<br>
         <strong>Net After Fees:</strong> $${net.toFixed(2)}<br>
         <strong>Profit:</strong> $${profit.toFixed(2)}<br>
         <strong>Break-Even Offer:</strong> $${breakEven.toFixed(2)}
       `;
+
+      localStorage.setItem("lastTpAvg", tpAvg);
+      localStorage.setItem("lastCOGS", cogs);
+      localStorage.setItem("lastOfferPct", offerPct);
+      localStorage.setItem("lastPromo", includePromo);
+      localStorage.setItem("lastPlatform", platform);
+    }
+
+    window.onload = function () {
+      if (localStorage.getItem("lastTpAvg")) {
+        document.getElementById("tpAvg").value = localStorage.getItem("lastTpAvg");
+        document.getElementById("cogs").value = localStorage.getItem("lastCOGS");
+        document.getElementById("offerPct").value = localStorage.getItem("lastOfferPct");
+        document.getElementById("promoToggle").checked = (localStorage.getItem("lastPromo") === 'true');
+        document.getElementById("platform").value = localStorage.getItem("lastPlatform");
+      }
     }
   </script>
 </body>
